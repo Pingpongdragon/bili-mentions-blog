@@ -1,0 +1,9 @@
+{
+  "bvid": "BV1Mxn26eEh5",
+  "title": "DeepSeek 开源推理框架 DeepInfer：P/D 分离与 KVCache 架构",
+  "author": "eogee",
+  "summary": "P/D 分离、KVCache 独立存储 72 小时、SWA 有界重放、DSpark 推测解码，96% 缓存命中背后的成本账。",
+  "published": "2026-11-04",
+  "cover": "assets/BV1Mxn26eEh5.jpg",
+  "url": "https://www.bilibili.com/video/BV1Mxn26eEh5/"
+}
