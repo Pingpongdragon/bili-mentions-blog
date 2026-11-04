@@ -1,0 +1,53 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>【推荐】从 Codex 源码学 Agent 工程 02｜长任务架构：Codex 如何持续工作</title><style>
+:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f6f8fb;color:#0f172a;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC",sans-serif;line-height:1.8}
+.wrap{max-width:900px;margin:0 auto;padding:36px 18px 80px}
+article{background:#fff;border:1px solid #e5eaf2;border-radius:18px;padding:34px 38px;box-shadow:0 8px 30px rgba(15,23,42,.04)}
+h1{font-size:30px;line-height:1.3;margin:0 0 10px}h2{font-size:21px;margin:30px 0 10px}
+a{color:#2563eb;text-decoration:none}a:hover{text-decoration:underline}
+.meta{color:#64748b;font-size:14px;margin:0 0 18px}
+.cover{width:100%;border-radius:14px;display:block;margin:18px 0;border:1px solid #e5eaf2}
+.summary{background:#f8fafc;border:1px solid #e5eaf2;border-left:4px solid #3b82f6;border-radius:10px;padding:14px 18px;margin:20px 0}
+.summary strong{display:block;margin-bottom:4px}
+.body p{margin:12px 0}.body ul,.body ol{margin:10px 0 10px 22px}.body li{margin:6px 0}
+.body blockquote{margin:16px 0;padding:10px 16px;border-left:3px solid #93c5fd;background:#f8fafc;color:#334155}
+.body code{background:#f1f5f9;padding:1px 5px;border-radius:4px}
+.body pre{background:#0f172a;color:#e2e8f0;padding:14px;border-radius:10px;overflow:auto}
+.back{display:inline-block;margin-bottom:16px;color:#64748b;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.card{background:#fff;border:1px solid #e5eaf2;border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(15,23,42,.04);display:flex;flex-direction:column;color:inherit}
+.card img{width:100%;height:150px;object-fit:cover;display:block;background:#e2e8f0}
+.card .pad{padding:14px 16px 18px}.card h2{font-size:17px;margin:0 0 8px;line-height:1.4}
+.card p{font-size:13px;color:#475569;margin:0 0 8px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.card small{color:#94a3b8;font-size:12px}
+.empty{padding:40px 0;color:#64748b;text-align:center}
+@media(max-width:640px){.wrap{padding:20px 12px 50px}article{padding:22px 18px}h1{font-size:24px}}
+</style></head><body><div class="wrap"><a class="back" href="../index.html">← 返回列表</a>
+<article>
+  <h1>【推荐】从 Codex 源码学 Agent 工程 02｜长任务架构：Codex 如何持续工作</h1>
+  <p class="meta">UP：AI架构师Leo · <a href="https://www.bilibili.com/video/BV1GEHX64EwC/" target="_blank" rel="noreferrer">BV1GEHX64EwC</a> · 2026-11-04</p>
+  <img class="cover" src="../assets/BV1GEHX64EwC.jpg" alt="【推荐】从 Codex 源码学 Agent 工程 02｜长任务架构：Codex 如何持续工作">
+  <div class="summary"><strong>一句话总结</strong>Codex 长任务拆成会话/轮次/请求-工具/命令进程四层；长命令观察窗口、输出缓冲、压缩持久化、Goal 模式与恢复边界。</div>
+  <div class="body"><h2>一句话总结</h2>
+<p>这期把 Codex 的「长任务」拆成四层：<strong>会话历史、当前轮次、模型请求/工具循环、独立的命令进程</strong>；再讲清长命令的观察窗口、输出缓冲、上下文压缩与持久化、可选的 Goal 模式，以及追加输入、取消和重启恢复的边界。</p>
+
+<h2>视频讲了什么</h2>
+<p>先建立一个对象图：最外层是会话（历史、配置）；里面一层是当前正在执行的一轮工作（任务句柄、取消信号）；再里面是模型请求和工具调用组成的内层循环；右边单独画的是测试进程——模型请求可能已经结束、启动测试的工具也返回了，但测试进程还在跑。所以不能用一句“Codex 正在运行”概括全部状态，它可能在等模型、在等工具、在等进程，或者已经进入压缩/恢复。</p>
+<p>长命令的关键是「观察窗口」：启动测试后先等一个有限时间，结束就直接返回结果；没结束就把已有输出和一个执行会话编号返回，进程继续在后台跑。后续用同一个编号继续读取输出，必要时还能向 TTY 会话写入。这里要分别记录「这次等了多久」和「进程有没有退出」——把观察窗口结束当成测试失败会重复启动，当成完成又会提前汇报。后台输出进入有容量上限的缓冲池，保留头尾、中间截断，所以模型不能假设自己看到了完整日志；界面刷到某行错误，也不代表模型下一次请求一定收到了。</p>
+<p>任务变长后进入压缩：达到阈值或收到新窗口请求，Codex 会把轮次内容压成新的替换历史，后续请求用新窗口继续。压缩有本地/远端路径，也可能失败；成功也不保证无损，发现依赖遗漏要回看原始要求和文件。压缩写检查点，但「持久化历史」和「模型当前窗口」是两件事：历史保存下来，不会自动变成模型随时记得的内容。</p>
+<p>Goal 模式是可选的跨轮次扩展：保存目标状态、预算和用量；空闲事件后检查目标是否 active、线程是否允许启动、预算是否够，再生成下一轮输入。它用锁保护「读目标→启动下一轮」的时序，避免并发修改；预算在工具结束和轮次结束时核算，不承诺刚好到某个 token 就掐断。普通模型/工具循环本身也能跑很久，Goal 主要管跨轮次推进。</p>
+<p>用户介入有两条路：追加输入进入队列，在允许消费的位置写入上下文，不会凭空塞进已发出的请求，也不表示当前工具立刻停；取消则传播取消信号，让工具、审批、异步任务收尾。但已经写进去的文件、已经提交的远端作业不会自动回滚，恢复时要核对实际状态。重启恢复时，先从有效检查点重放替换历史，没有就从历史起点重建；模型上下文可以重建，文件差异、测试进程、远端作业仍要重新核对，进程没了光有编号也不会复活。</p>
+
+<h2>关键点</h2>
+<ul>
+<li><strong>四层边界</strong>：会话 / 轮次 / 请求-工具循环 / 命令进程，各自有状态，不能混成一个“运行中”。</li>
+<li><strong>观察窗口</strong>：长命令先返回已有输出 + 会话编号，后续读同一个进程；观察结束和进程退出分开记录。</li>
+<li><strong>输出缓冲有上限</strong>：头尾保留、中间截断；模型看到的日志可能不完整。</li>
+<li><strong>压缩 ≠ 持久化</strong>：压缩替换模型窗口，检查点保存恢复信息；历史不会自动变成模型记忆。</li>
+<li><strong>Goal 管跨轮次</strong>：状态、预算、空闲条件、锁保护；不负责把每个 token 都算准。</li>
+<li><strong>取消不自动回滚</strong>：文件、远端作业、外部状态要重新核对；恢复会话 ≠ 恢复所有进程。</li>
+</ul>
+
+<h2>适合谁看</h2>
+<p>做 agent 长任务、代码代理、会话恢复、上下文压缩的人；以及想从 Codex 源码理解「会话/轮次/进程」怎么分层的人。需要一点 agent loop 和进程管理背景，纯新手可能会觉得对象图有点密。</p>
+</div>
+</article></div></body></html>
