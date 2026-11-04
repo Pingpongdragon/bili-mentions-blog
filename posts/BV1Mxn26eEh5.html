@@ -1,0 +1,53 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DeepSeek 开源推理框架 DeepInfer：P/D 分离与 KVCache 架构</title><style>
+:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f6f8fb;color:#0f172a;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC",sans-serif;line-height:1.8}
+.wrap{max-width:900px;margin:0 auto;padding:36px 18px 80px}
+article{background:#fff;border:1px solid #e5eaf2;border-radius:18px;padding:34px 38px;box-shadow:0 8px 30px rgba(15,23,42,.04)}
+h1{font-size:30px;line-height:1.3;margin:0 0 10px}h2{font-size:21px;margin:30px 0 10px}
+a{color:#2563eb;text-decoration:none}a:hover{text-decoration:underline}
+.meta{color:#64748b;font-size:14px;margin:0 0 18px}
+.cover{width:100%;border-radius:14px;display:block;margin:18px 0;border:1px solid #e5eaf2}
+.summary{background:#f8fafc;border:1px solid #e5eaf2;border-left:4px solid #3b82f6;border-radius:10px;padding:14px 18px;margin:20px 0}
+.summary strong{display:block;margin-bottom:4px}
+.body p{margin:12px 0}.body ul,.body ol{margin:10px 0 10px 22px}.body li{margin:6px 0}
+.body blockquote{margin:16px 0;padding:10px 16px;border-left:3px solid #93c5fd;background:#f8fafc;color:#334155}
+.body code{background:#f1f5f9;padding:1px 5px;border-radius:4px}
+.body pre{background:#0f172a;color:#e2e8f0;padding:14px;border-radius:10px;overflow:auto}
+.back{display:inline-block;margin-bottom:16px;color:#64748b;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.card{background:#fff;border:1px solid #e5eaf2;border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(15,23,42,.04);display:flex;flex-direction:column;color:inherit}
+.card img{width:100%;height:150px;object-fit:cover;display:block;background:#e2e8f0}
+.card .pad{padding:14px 16px 18px}.card h2{font-size:17px;margin:0 0 8px;line-height:1.4}
+.card p{font-size:13px;color:#475569;margin:0 0 8px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.card small{color:#94a3b8;font-size:12px}
+.empty{padding:40px 0;color:#64748b;text-align:center}
+@media(max-width:640px){.wrap{padding:20px 12px 50px}article{padding:22px 18px}h1{font-size:24px}}
+</style></head><body><div class="wrap"><a class="back" href="../index.html">← 返回列表</a>
+<article>
+  <h1>DeepSeek 开源推理框架 DeepInfer：P/D 分离与 KVCache 架构</h1>
+  <p class="meta">UP：eogee · <a href="https://www.bilibili.com/video/BV1Mxn26eEh5/" target="_blank" rel="noreferrer">BV1Mxn26eEh5</a> · 2026-11-04</p>
+  <img class="cover" src="../assets/BV1Mxn26eEh5.jpg" alt="DeepSeek 开源推理框架 DeepInfer：P/D 分离与 KVCache 架构">
+  <div class="summary"><strong>一句话总结</strong>P/D 分离、KVCache 独立存储 72 小时、SWA 有界重放、DSpark 推测解码，96% 缓存命中背后的成本账。</div>
+  <div class="body"><h2>一句话总结</h2>
+<p>这期是 DeepSeek 开源的内部推理框架 <strong>DeepInfer</strong> 的导读：重点不是逐行读代码，而是理解它为什么能把推理成本压下来——<strong>Prefill/Decode 分离、KVCache 独立集群与 72 小时保留、SWA 有界重放、DSpark 推测解码</strong>，以及 96% 缓存命中率背后的工程取舍。</p>
+
+<h2>视频讲了什么</h2>
+<p>DeepSeek 这次开源了两样东西：DeepInfer 框架本体，以及 <code>deepseek-recipe</code> 编解码组件。后者把 Claude Code 的 message、Codex 的 responses、常见 chat completions 三种请求统一转成 DeepSeek 内部提示词格式，再转成对应接口输出；技术难度不算高，但能省掉大量适配工作。开源的主要意义是：需要部署 DeepSeek 的团队可以直接参考它的推理框架，研究者和学者也能从里面吸收方法论。</p>
+<p>核心是 P/D 分离。Prefill 是预填充：把提示词（包括 system prompt、工具说明、MCP 描述）一次性大规模并行计算，快速理解上下文；DeepSeek 统计的平均提示词长度是 <strong>77K token</strong>，已经占 256K 上下文的三成。Decode 是解码：从第一个输出 token 开始串行计算，每步都要回顾之前的 KVCache，效率天然低。把 Prefill 和 Decode 部署到不同硬件上，是为了避免两个阶段抢资源。</p>
+<p>KVCache 这次被做成独立集群：不放在 GPU 显存里，而是单独存储，保留 <strong>72 小时</strong>；官方给出的缓存命中率约 <strong>96%</strong>。缓存命中直接决定成本和延迟：命中就走 Decode，不命中才进 Prefill。视频给的数据是 <strong>230 TPS</strong>，代码场景可到 <strong>300 TPS</strong>；官方还有一个 <strong>38 美元</strong>的成本数字，视频作者交叉计算后认为能对上。</p>
+<p>降低注意力成本的关键是 <strong>SWA 有界重放</strong>：传统 attention 随上下文长度平方增长，有界重放把它变成线性增长，同时提升缓存命中率，两个优势叠加进一步降计算。另一个是 <strong>DSpark 推测解码</strong>：在 MTP 基础上做并行草稿器，多个草稿同时展开，覆盖更多候选；再用置信度调度决定「干得好就多干、干不好就收手」，并做验证。配合异步批调度（GPU 不必等 CPU）和固定随机种子下的批不变性/确定性输出，推理效率和可复现性一起拿。</p>
+<p>最后是边界：DeepInfer 绑定 DeepSeek V4.1 Flash，构建在 vLLM/SGLang/TensorRT 之上，不是替代 vLLM；只支持 Linux + CUDA 13 + SM100（B100/B200/GB200）或昇腾 950，消费级显卡和 Windows 都跑不了。这次开源的边界也不包括 KVCache 系统、部署编排和副本负载均衡。</p>
+
+<h2>关键点</h2>
+<ul>
+<li><strong>P/D 分离</strong>：Prefill 计算密集、Decode 访存密集，分到不同硬件避免互相抢资源。</li>
+<li><strong>KVCache 是成本中心</strong>：独立存储 + 72 小时保留 + 96% 命中，决定了首 token 延迟和整体吞吐。</li>
+<li><strong>SWA 有界重放</strong>：把 attention 从平方级压到线性级，同时提高缓存命中率。</li>
+<li><strong>DSpark</strong>：并行草稿 + 置信度调度 + 验证，用推测解码换吞吐。</li>
+<li><strong>确定性输出</strong>：批不变性 + 固定随机种子，保证同样输入给同样结果。</li>
+<li><strong>开源边界</strong>：框架和 recipe 开了，KVCache 系统/部署编排/副本负载均衡没开。</li>
+</ul>
+
+<h2>适合谁看</h2>
+<p>做 LLM 推理部署、推理框架、KVCache/注意力优化的人；以及想知道 DeepSeek 内部推理栈长什么样的工程师。视频是导读性质，不会逐行讲论文公式，但把架构链路和关键数字讲清楚了，适合先建立地图再回去读官方文档。</p>
+</div>
+</article></div></body></html>
