@@ -1,0 +1,9 @@
+{
+  "bvid": "BV1GEHX64EwC",
+  "title": "【推荐】从 Codex 源码学 Agent 工程 02｜长任务架构：Codex 如何持续工作",
+  "author": "AI架构师Leo",
+  "summary": "Codex 长任务拆成会话/轮次/请求-工具/命令进程四层；长命令观察窗口、输出缓冲、压缩持久化、Goal 模式与恢复边界。",
+  "published": "2026-11-04",
+  "cover": "assets/BV1GEHX64EwC.jpg",
+  "url": "https://www.bilibili.com/video/BV1GEHX64EwC/"
+}
