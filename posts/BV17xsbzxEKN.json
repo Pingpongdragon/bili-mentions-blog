@@ -1,0 +1,9 @@
+{
+  "bvid": "BV17xsbzxEKN",
+  "title": "南京大学副教授蒋炎岩：Mosaic 操作系统模型和检查器",
+  "author": "西安数学张老师",
+  "summary": "用 50 行玩具 OS + 500 行模型检查器复现教科书并发/崩溃例子，再提出把 Linux 6.0 状态映射回简单模型的逆 refinement。",
+  "published": "2026-11-04",
+  "cover": "assets/BV17xsbzxEKN.jpg",
+  "url": "https://www.bilibili.com/video/BV17xsbzxEKN/"
+}
