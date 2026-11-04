@@ -1,0 +1,50 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DeepSeek Harness [09]：需求、架构与插件生态</title><style>
+:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f6f8fb;color:#0f172a;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC",sans-serif;line-height:1.8}
+.wrap{max-width:900px;margin:0 auto;padding:36px 18px 80px}
+article{background:#fff;border:1px solid #e5eaf2;border-radius:18px;padding:34px 38px;box-shadow:0 8px 30px rgba(15,23,42,.04)}
+h1{font-size:30px;line-height:1.3;margin:0 0 10px}h2{font-size:21px;margin:30px 0 10px}
+a{color:#2563eb;text-decoration:none}a:hover{text-decoration:underline}
+.meta{color:#64748b;font-size:14px;margin:0 0 18px}
+.cover{width:100%;border-radius:14px;display:block;margin:18px 0;border:1px solid #e5eaf2}
+.summary{background:#f8fafc;border:1px solid #e5eaf2;border-left:4px solid #3b82f6;border-radius:10px;padding:14px 18px;margin:20px 0}
+.summary strong{display:block;margin-bottom:4px}
+.body p{margin:12px 0}.body ul,.body ol{margin:10px 0 10px 22px}.body li{margin:6px 0}
+.body blockquote{margin:16px 0;padding:10px 16px;border-left:3px solid #93c5fd;background:#f8fafc;color:#334155}
+.body code{background:#f1f5f9;padding:1px 5px;border-radius:4px}
+.body pre{background:#0f172a;color:#e2e8f0;padding:14px;border-radius:10px;overflow:auto}
+.back{display:inline-block;margin-bottom:16px;color:#64748b;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.card{background:#fff;border:1px solid #e5eaf2;border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(15,23,42,.04);display:flex;flex-direction:column;color:inherit}
+.card img{width:100%;height:150px;object-fit:cover;display:block;background:#e2e8f0}
+.card .pad{padding:14px 16px 18px}.card h2{font-size:17px;margin:0 0 8px;line-height:1.4}
+.card p{font-size:13px;color:#475569;margin:0 0 8px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.card small{color:#94a3b8;font-size:12px}
+.empty{padding:40px 0;color:#64748b;text-align:center}
+@media(max-width:640px){.wrap{padding:20px 12px 50px}article{padding:22px 18px}h1{font-size:24px}}
+</style></head><body><div class="wrap"><a class="back" href="../index.html">← 返回列表</a>
+<article>
+  <h1>DeepSeek Harness [09]：需求、架构与插件生态</h1>
+  <p class="meta">UP：绿导师原谅你了 · <a href="https://www.bilibili.com/video/BV144nc6KEA4/" target="_blank" rel="noreferrer">BV144nc6KEA4</a> · 2026-11-04</p>
+  <img class="cover" src="../assets/BV144nc6KEA4.jpg" alt="DeepSeek Harness [09]：需求、架构与插件生态">
+  <div class="summary"><strong>一句话总结</strong>150 行 agent demo 不能当产品；DSH 用 microkernel + append-only session + event bus 换插件生态，但消不掉 essential complexity。</div>
+  <div class="body"><h2>一句话总结</h2>
+<p>这节用「150 行 agent demo 为什么不能当产品」作引子，讲透两件事：<strong>需求会杀死架构</strong>；<strong>DSH 用 microkernel + append-only session + event bus 把能力让给插件生态</strong>。但插件只能消除 accidental complexity，消除不了 essential complexity。</p>
+
+<h2>视频讲了什么</h2>
+<p>开场先说 git 已经不够用：有 agent 后一个学生就拥有公司级组织架构，你是 CTO，要协调大量并行任务，于是设想只读锁、写锁、重构锁。接着用 150 行 agent 做三维校园：能跑，但断网即终止、没有会话恢复，demo 的假设是网络稳定；这就是 essential complexity（来自需求），不是再堆几个插件能消掉的。</p>
+<p>然后讲需求如何杀死架构：五十万行写完上线，老板一句改需求，交互假设全崩。架构的本质是受限与自由的取舍——约束划出边界让 sub agent 并行，太自由等于没有架构；LAMP 单机最优、十亿人处处瓶颈，MapReduce 用两函数限制换容错。DSH 的选择是 microkernel：Cordis 管服务解析与插件装卸，session 是只追加的事件日志、唯一事实来源，模型历史由事件派生，event bus 按领域分类，插件还能修改尚未落盘的 pre-step 事件。</p>
+<p>后半段是演示与生态：扔掉 UI slots 的 TUI、PDF、VS Code 式侧边栏；creator mode 让 agent 运行时拆装插件，现场加了一个超大号用量显示；WPS/Excel bridge 只支持「锁对象、交给模型、把修改拿回来」三步就接进生态；动态 UI 让模型输出带 JS 的 HTML 卡片。代价是插件语义会冲突、hook 顺序会打架，所以 DSH 用 pre-commit、类型检查、文档配对、CI gate 这些验证器来兜底，而不是靠人逐条列「不要」。</p>
+
+<h2>关键点</h2>
+<ul>
+<li><strong>demo 的假设</strong>：网络稳定、进程不崩、会话可恢复；一旦这些假设不成立，demo 就不是产品。</li>
+<li><strong>需求会杀死架构</strong>：早期决策会跟着软件一辈子；MVP 要先验证最危险的假设，不是先调按钮样式。</li>
+<li><strong>架构 = 用限制换协作</strong>：LAMP、MapReduce、DSH 的 microkernel 都是主动放弃一部分自由，换可并行、可容错、可扩展。</li>
+<li><strong>session 是唯一事实</strong>：只追加事件日志，模型历史、UI、工具状态都从事件派生，才能回放、恢复、审计。</li>
+<li><strong>插件生态的边界</strong>：插件能消 accidental complexity，消不掉 essential complexity；语义冲突要靠验证器和规范，不是靠更多插件。</li>
+</ul>
+
+<h2>适合谁看</h2>
+<p>正在做 agent 产品、插件系统、IDE/终端工具的人；以及想理解「为什么架构不是画图，而是划边界」的开发者。最好先知道一点 DSH/Cordis、事件溯源和 LAMP/MapReduce，否则后半段会有点快。</p>
+</div>
+</article></div></body></html>
