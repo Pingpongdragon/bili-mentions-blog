@@ -1,0 +1,9 @@
+{
+  "bvid": "BV144nc6KEA4",
+  "title": "DeepSeek Harness [09]：需求、架构与插件生态",
+  "author": "绿导师原谅你了",
+  "summary": "150 行 agent demo 不能当产品；DSH 用 microkernel + append-only session + event bus 换插件生态，但消不掉 essential complexity。",
+  "published": "2026-11-04",
+  "cover": "assets/BV144nc6KEA4.jpg",
+  "url": "https://www.bilibili.com/video/BV144nc6KEA4/"
+}
