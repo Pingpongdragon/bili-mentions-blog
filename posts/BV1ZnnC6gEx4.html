@@ -1,0 +1,55 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DeepSeek-V4.1-Flash 架构全解｜1M 上下文 KV 压到 890 字节</title><style>
+:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f6f8fb;color:#0f172a;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC",sans-serif;line-height:1.8}
+.wrap{max-width:900px;margin:0 auto;padding:36px 18px 80px}
+article{background:#fff;border:1px solid #e5eaf2;border-radius:18px;padding:34px 38px;box-shadow:0 8px 30px rgba(15,23,42,.04)}
+h1{font-size:30px;line-height:1.3;margin:0 0 10px}h2{font-size:21px;margin:30px 0 10px}
+a{color:#2563eb;text-decoration:none}a:hover{text-decoration:underline}
+.meta{color:#64748b;font-size:14px;margin:0 0 18px}
+.cover{width:100%;border-radius:14px;display:block;margin:18px 0;border:1px solid #e5eaf2}
+.summary{background:#f8fafc;border:1px solid #e5eaf2;border-left:4px solid #3b82f6;border-radius:10px;padding:14px 18px;margin:20px 0}
+.summary strong{display:block;margin-bottom:4px}
+.body p{margin:12px 0}.body ul,.body ol{margin:10px 0 10px 22px}.body li{margin:6px 0}
+.body blockquote{margin:16px 0;padding:10px 16px;border-left:3px solid #93c5fd;background:#f8fafc;color:#334155}
+.body code{background:#f1f5f9;padding:1px 5px;border-radius:4px}
+.body pre{background:#0f172a;color:#e2e8f0;padding:14px;border-radius:10px;overflow:auto}
+.back{display:inline-block;margin-bottom:16px;color:#64748b;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.card{background:#fff;border:1px solid #e5eaf2;border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(15,23,42,.04);display:flex;flex-direction:column;color:inherit}
+.card img{width:100%;height:150px;object-fit:cover;display:block;background:#e2e8f0}
+.card .pad{padding:14px 16px 18px}.card h2{font-size:17px;margin:0 0 8px;line-height:1.4}
+.card p{font-size:13px;color:#475569;margin:0 0 8px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.card small{color:#94a3b8;font-size:12px}
+.empty{padding:40px 0;color:#64748b;text-align:center}
+@media(max-width:640px){.wrap{padding:20px 12px 50px}article{padding:22px 18px}h1{font-size:24px}}
+</style></head><body><div class="wrap"><a class="back" href="../index.html">← 返回列表</a>
+<article>
+  <h1>DeepSeek-V4.1-Flash 架构全解｜1M 上下文 KV 压到 890 字节</h1>
+  <p class="meta">UP：KianLee · <a href="https://www.bilibili.com/video/BV1ZnnC6gEx4/" target="_blank" rel="noreferrer">BV1ZnnC6gEx4</a> · 2026-11-06</p>
+  <img class="cover" src="../assets/BV1ZnnC6gEx4.jpg" alt="DeepSeek-V4.1-Flash 架构全解｜1M 上下文 KV 压到 890 字节">
+  <div class="summary"><strong>一句话总结</strong>1M 上下文每 token 全局 KV 890 字节，约为 V4-Flash 的 1/4；CED 预填充减半、CSA2 三维压缩、FP4 主 KV、有界回放四层叠出来。</div>
+  <div class="body"><h2>一句话总结</h2>
+<p>这期把 DeepSeek-V4.1-Flash 的 1M 上下文拆到每一层：每个 token 的全局 KV 压到 <strong>890 字节</strong>，约为上一代 V4-Flash 的 1/4、初代的 1/437；不是把模型做小，而是 <strong>CED + CSA2 + FP4 主 KV + 有界回放</strong> 四层结构叠出来的。</p>
+
+<h2>视频讲了什么</h2>
+<p>先讲瓶颈：智能体循环让上下文不断变长，每轮都要重新预填充、生成 KV 缓存；缓存要占显存/内存/固态盘，还要在它们之间搬运，而搬运受带宽限制。上下文越长，算得越多、存得越多、搬得也越多，三条曲线一起把成本推上去。所以问题不是“模型够不够大”，而是“每一层到底需要记住多少东西”。V4.1-Flash 的结果是：上下文从 4K 到 1M 放大 256 倍，单 token 解码算力只增加约 25%。</p>
+<p>整体是 40 层、隐藏维度 5120：下面 20 层是因果编码器，上面 20 层是解码器；最底两层用滑动窗口注意力，其余用压缩稀疏注意力。编码器每 6 层一组，第一层完整计算，后 5 层复用；解码器每 4 层一组，第一组第一层完整、后 3 层复用，后面四组改成“第一层重新索引、后 3 层复用”。每个 Transformer 块接 MoE：1 个共享专家 + 384 个路由专家，每 token 只激活 6 个；再加 Engram 条件记忆、DSpark 推测解码和多模态视觉通路。</p>
+<p>核心创新是 CED（因果编码器—解码器）：解码器的全局 KV 不必自己逐层算，而是把 token 送进前 20 层，拿第 20 层隐藏状态，用一组逐层独立的投影矩阵投影出解码器每一层的 KV 和压缩权重。预填充只跑前 20 层，后 20 层的全局 KV 由投影得到；滑动窗口那部分仍逐层算。于是预填充激活约 8B、解码激活约 16B，输入密集时省 50%；复杂度从 N×L 变成 N×L/2 加一个窗口小尾巴，序列越长收益越明显。</p>
+<p>CSA2 在三个可相乘的维度上压 KV：entry（每个缓存条目大小，GQA/MLA）、sequence（连续 M 个 token 压成一个条目）、layer（某些层直接复用别的层的缓存/索引）。它把层分成 Full / Reindex / Reuse 三种角色：Full 自己算主 KV、投影 Indexer K、跑索引器选 512 个条目；Reindex 复用 KV 和 Indexer K，但用自己的查询重新打分、选新的 Top-K；Reuse 连 Top-K 索引都复用，只算查询和滑动窗口 KV。真实配置下 40 层里只有 4 层真正生成主 KV，索引也只由 8 层产生；复用层预填充只需 15 个 kernel、解码 11 个。</p>
+<p>层次稀疏索引器解决“1M 上下文里给全量位置打分”的瓶颈：第一层 Full 先做一次全量打分，按块取最大分，挑 2048 个块、每块 8 个位置，形成 16384 个候选；后面所有索引层只在这个池里打分，单查询成本从 O(N) 变成 O(1)，而且训练和推理的搜索域一致。FP4 主 KV 的前提是 RMS 归一化 + RoPE 保范数：512 维二范数最多约 22.6，训练中观察到的最大幅值约 10，所以 E2M1 + 每 16 通道一个 E4M3 scale 够用，甚至不需要第二级全局缩放；取出时先反量化再做注意力，不依赖硬件 FP4 矩阵乘。滑动窗口 KV 更敏感，保留 BF16/FP8；全局 KV 常驻显存 890 字节/token，滑动窗口 KV 放每台机器 10% 的内存池、只存活几分钟，跨会话前缀放固态盘至少 72 小时。全局 KV 命中、滑动窗口没命中时，不做完整重算，只回放最近 128 个 token（精确重建要 20 层×128=2560），把“灾难性 miss”变成“小幅降级”。</p>
+<p>另外三个效率扩展：Single-Pass mHC 维护 4 条残差流，把混合系数错开一个块，消除依赖，流量从 4N+4D 降到 2N+2D，融合成一个 kernel，激活读写减 50%；Engram 用 n-gram 哈希查表（2/3/4-gram、8 个哈希头、约 1600 万条目的素数表、FP8），196B 参数只放第 1 和第 14 层，推理时按地址预取；DSpark 用三层小草稿模型一次并行给 5 个草稿位置，Markov 头建模草稿依赖、置信头估接受率，调度器结合引擎吞吐曲线动态决定验证长度，目标是系统总吞吐而不是单请求最快。训练是 45T token 多模态语料（文本:多模态 7:1），稀疏注意力从零开始在 64K 上直接训，34T token 时扩到 1M；后训练没有新算法，变化在数据：任务形式化成“问题-环境-验证系统”三元组，自建 DSEC 沙箱一台机器跑 2500 个容器，异步 RL 可中断保存 KV/专家路由再恢复；推理力度用 1–100 的标量，API 暴露 low/high/max。</p>
+
+<h2>关键点</h2>
+<ul>
+<li><strong>890 字节/token</strong>：约为 V4-Flash 的 1/4、初代的 1/437；4K→1M 放大 256 倍，解码算力只 +25%。</li>
+<li><strong>CED</strong>：解码器全局 KV 由第 20 层隐藏状态投影，预填充只跑一半层，计算量约减半。</li>
+<li><strong>CSA2</strong>：entry × sequence × layer 三维压缩；Full/Reindex/Reuse 三种模式解耦“共享缓存”和“共享索引”。</li>
+<li><strong>层次稀疏索引器</strong>：先全量打分选 16384 候选，后续层只在池内打分，O(N)→O(1)。</li>
+<li><strong>FP4 主 KV</strong>：RMSNorm + RoPE 保范数，E2M1 + E4M3 scale 够用；SWA KV 保留高精度。</li>
+<li><strong>有界回放</strong>：未命中只回放 128 token，而非 2560，把灾难 miss 变成小幅降级。</li>
+<li><strong>结果</strong>：SWE v1.1 74.2（上一代 54.4，Opus 5.5 74.0）、Terminal Bench 2.1 90.6、Codeforces 3471；推理力度 25→180 平均 +9.2 点，代价约 2.5 倍输出 token。</li>
+</ul>
+
+<h2>适合谁看</h2>
+<p>做 LLM 推理、KV 缓存、长上下文、稀疏注意力、MoE 系统的人；以及想理解 DeepSeek V4.1-Flash 架构取舍的工程师。视频是逐帧动画图解，信息密度很高，最好有 Transformer/注意力/KV 缓存基础，否则 16 分钟会有点赶。</p>
+</div>
+</article></div></body></html>
