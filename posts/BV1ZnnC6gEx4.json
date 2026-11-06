@@ -1,0 +1,9 @@
+{
+  "bvid": "BV1ZnnC6gEx4",
+  "title": "DeepSeek-V4.1-Flash 架构全解｜1M 上下文 KV 压到 890 字节",
+  "author": "KianLee",
+  "summary": "1M 上下文每 token 全局 KV 890 字节，约为 V4-Flash 的 1/4；CED 预填充减半、CSA2 三维压缩、FP4 主 KV、有界回放四层叠出来。",
+  "published": "2026-11-06",
+  "cover": "assets/BV1ZnnC6gEx4.jpg",
+  "url": "https://www.bilibili.com/video/BV1ZnnC6gEx4/"
+}
