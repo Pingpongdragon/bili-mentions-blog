@@ -1,0 +1,55 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>12GB 显卡跑 510GB DeepSeek V4.1-Flash：三条路线实测</title><style>
+:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f6f8fb;color:#0f172a;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC",sans-serif;line-height:1.8}
+.wrap{max-width:900px;margin:0 auto;padding:36px 18px 80px}
+article{background:#fff;border:1px solid #e5eaf2;border-radius:18px;padding:34px 38px;box-shadow:0 8px 30px rgba(15,23,42,.04)}
+h1{font-size:30px;line-height:1.3;margin:0 0 10px}h2{font-size:21px;margin:30px 0 10px}
+a{color:#2563eb;text-decoration:none}a:hover{text-decoration:underline}
+.meta{color:#64748b;font-size:14px;margin:0 0 18px}
+.cover{width:100%;border-radius:14px;display:block;margin:18px 0;border:1px solid #e5eaf2}
+.summary{background:#f8fafc;border:1px solid #e5eaf2;border-left:4px solid #3b82f6;border-radius:10px;padding:14px 18px;margin:20px 0}
+.summary strong{display:block;margin-bottom:4px}
+.body p{margin:12px 0}.body ul,.body ol{margin:10px 0 10px 22px}.body li{margin:6px 0}
+.body blockquote{margin:16px 0;padding:10px 16px;border-left:3px solid #93c5fd;background:#f8fafc;color:#334155}
+.body code{background:#f1f5f9;padding:1px 5px;border-radius:4px}
+.body pre{background:#0f172a;color:#e2e8f0;padding:14px;border-radius:10px;overflow:auto}
+.back{display:inline-block;margin-bottom:16px;color:#64748b;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.card{background:#fff;border:1px solid #e5eaf2;border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(15,23,42,.04);display:flex;flex-direction:column;color:inherit}
+.card img{width:100%;height:150px;object-fit:cover;display:block;background:#e2e8f0}
+.card .pad{padding:14px 16px 18px}.card h2{font-size:17px;margin:0 0 8px;line-height:1.4}
+.card p{font-size:13px;color:#475569;margin:0 0 8px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.card small{color:#94a3b8;font-size:12px}
+.empty{padding:40px 0;color:#64748b;text-align:center}
+@media(max-width:640px){.wrap{padding:20px 12px 50px}article{padding:22px 18px}h1{font-size:24px}}
+</style></head><body><div class="wrap"><a class="back" href="../index.html">← 返回列表</a>
+<article>
+  <h1>12GB 显卡跑 510GB DeepSeek V4.1-Flash：三条路线实测</h1>
+  <p class="meta">UP：翻车老头 · <a href="https://www.bilibili.com/video/BV1j44z6GE6T/" target="_blank" rel="noreferrer">BV1j44z6GE6T</a> · 2026-11-07</p>
+  <img class="cover" src="../assets/BV1j44z6GE6T.jpg" alt="12GB 显卡跑 510GB DeepSeek V4.1-Flash：三条路线实测">
+  <div class="summary"><strong>一句话总结</strong>Strata 跑 2-bit（46GB 内存起）、Prometheus 跑原始权重（7.4 tok/s，但仅 Windows/RTX30/40、64GB 内存、1.1TB SSD）、llama.cpp 在 12GB 卡还不行；32GB 内存只能干等。</div>
+  <div class="body"><h2>一句话总结</h2>
+<p>这期实测了「12GB 显卡跑 510GB DeepSeek V4.1-Flash」的三条路：<strong>Strata</strong> 跑 2-bit 压缩版（免费、37k 星，但要 46GB+ 内存）、<strong>Prometheus</strong> 跑原始权重（“先压缩再校正”，最高 7.4 tok/s，但仅 Windows/RTX 30/40、要 64GB 内存和 1.1TB SSD）、<strong>llama.cpp</strong>（12GB 卡目前还不行）。结论：32GB 内存只能干等，64GB 才是分水岭。</p>
+
+<h2>视频讲了什么</h2>
+<p>先解释“为什么能装下”：V4.1-Flash 是 763B 参数的 MoE，40 层每层 384 个专家，但每个 token 只激活 6 个；再加 196B 参数的 Engram n-gram 查找表，每个 token 只读几行。所以显卡不用装整个模型，只装当前 token 要用的专家，其余放内存/SSD。实测有人 19 分钟从硬盘读了 2.2TB（约模型 9 倍），写入只有约 1GB——主要在读，不用担心写坏盘。</p>
+<p>路线一 Strata：跑奥地利实验室的 2-bit 压缩版。需要 12GB 的 RTX 30/40/50（Windows/Linux）或 Radeon AI PRO R9700（Linux），46GB+ 内存（64GB 更舒服），高速 SSD 约 257GB。开发者数据：3060+46GB 约 8–10 tok/s，5070+64GB 约 4.7；独立测试：AI Receipts 5070+32GB 只有 1.84，NoCodeAbode 4070S+32GB（1.75-bit）约 2.8，Inference Guru 5070+64GB 最高 9.2。规律很清楚：<strong>内存比显卡更决定速度</strong>。</p>
+<p>“2-bit 还是 DeepSeek 吗？”作者查了评分表：所谓 2-bit 文件并非全程 2-bit，有一半专家层是 1.75-bit，2-bit 只是平均；原版在某一项拿了满分 100，所以“保持 100%”那一栏不可能显示下降。Strata 团队用约 5000 个位置对比词预测：2-bit 文件 perplexity 偏差 15.5%，1.75-bit 偏差 21%，普通英文散文偏差 53%，代码/Agent 任务只有个位数；12GB 卡上 Strata 默认快速模式还只跑 5 个专家（不是 6 个）。盲测卡丁车游戏：同一提示词，云端版 10/12，本地 2-bit 版 2/12；本地跑了 2 小时 6 分、1.3 万 token，页面能跑但质量差距明显（只各跑一次、关思考、开快速模式，不能证明本地版一定坏，但这是他找到的唯一真实对比）。</p>
+<p>路线二 Prometheus：英国公司 Mikus 的 Windows 引擎，作者 Ryan Flavel 用 AI 编程助手做的，GitHub 只有 30 星。它跑<strong>原始 510GB 权重</strong>，不直接硬解（原样精确解码只有 2.14 tok/s），而是“先压缩再校正”：每个 token 先在 2-bit 专家副本上算，若最看好的两个选项差距小于阈值，就用原始权重重算并加一组纠正层；另有小草稿头先猜后续词。配置：Windows 10/11、RTX 30/40、64GB 内存、建议 16 核 CPU、约 1.1TB 可用 NVMe（原始权重 + 2-bit 副本 + 修正层并排）、510GB 下载、约 4 小时构建。作者机器（Ryzen 9 3950X + 64GB DDR4 + 3060）：代码冷启动 5.8、热 7.4，推理/Agent 约 4–5，比原样精确解码快约 2.7 倍；960 多个词时 99.17% 与同一引擎“只用原始权重”的输出一致，但长 Agent 提示词逐项比对只有 95.9%，低于作者自己定的 97% 目标；约 1100 token 的提示词首个词要等约 2 分钟，之后约 2 秒。发布包只被下载 39 次、只有作者一台机器干净装过，这是全片最少被验证的结果。</p>
+<p>路线三 llama.cpp：10 月 25 日进主线，Unsloth 也发了压缩版指南；但 12GB 卡走不通——Unsloth 说最小 1-bit 也要约 128GB 内存+显存，64GB 有可能但更慢且没具体数字；12GB 卡没有公开的主线结果。最接近的测试是 AMD R9700 + RTX 5060 + 128GB 内存，写入约 6.5 tok/s、读取 30；llama.cpp 用 mmap 让 OS 按需从 SSD 取，Strata 在 5070+64GB 上测 mmap 只有 1.8–2.2，而直接读盘能到 4.3–4.9——一半模型在 SSD 上时，读取方式比显卡更关键。</p>
+<p>五步检查清单：① 内存最重要，32GB+12GB 卡只能启动后干等，64GB 两条主路都通，别为这个买新显卡（3060 是参考卡）；② SSD 必须高速 NVMe，Strata 留 257GB、Prometheus 留 1.1TB，只读不写不用担心寿命；③ 选文件：写代码/跑 Agent 用 2-bit，长篇写作避开 1.75-bit（散文偏差 53%），答案优先就开全质量模式用 6 个专家；④ 关掉占显存的程序（Chrome 每占 1GB 就少 1GB 专家内存）；⑤ Strata 默认开思考模式，快速任务关掉，否则每秒 2–7 token 还要先想上千 token。购买建议：12GB+32GB 别硬上，跑适配模型或调 API；64GB+RTX 用 Strata 2-bit 写代码/Agent，关键时开全质量；RTX 30/40+64GB+闲置 2TB+周末可试 Prometheus；Mac 64GB+ 用 Strata 纯文本版；24GB 显存+90GB 内存是另一档。最后作者提醒：要“真模型”的答案，直接调 API 更便宜——1.3 万输出 token 不到 1 美分。</p>
+
+<h2>关键点</h2>
+<ul>
+<li><strong>能跑的原因</strong>：MoE 每 token 只激活 6/384 专家 + Engram 只读几行；SSD 实际是“慢速内存”。</li>
+<li><strong>Strata</strong>：2-bit 版，12GB 卡 + 46GB 内存起，257GB SSD；开发者 8–10 tok/s，独立测试 1.8–9.2，内存越大越快。</li>
+<li><strong>2-bit 的真相</strong>：一半专家层是 1.75-bit；2-bit perplexity 偏差 15.5%，1.75-bit 21%，散文 53%，代码/Agent 个位数；12GB 快速模式只跑 5 个专家。</li>
+<li><strong>盲测</strong>：卡丁车游戏云端 10/12，本地 2-bit 2/12；本地 2 小时 6 分、1.3 万 token。</li>
+<li><strong>Prometheus</strong>：原始权重 + “先压缩再校正”，7.4 tok/s，99.17% 与自身精确模式一致；但仅 Windows/RTX 30/40、64GB 内存、1.1TB SSD、首个词约 2 分钟、仅 39 次下载。</li>
+<li><strong>llama.cpp</strong>：12GB 卡走不通；最小 1-bit 约 128GB 内存+显存；mmap 在 SSD 场景可能比直接读慢一倍。</li>
+<li><strong>清单</strong>：内存 > SSD > 文件选择 > 关显存占用 > 关思考模式；32GB 是硬门槛。</li>
+</ul>
+
+<h2>适合谁看</h2>
+<p>想在本地跑大模型、折腾 12GB 显卡/游戏 PC 的人；以及想判断“2-bit 压缩版还算不算 DeepSeek”的开发者。视频是英文原片的翻译解说，数字和测试条件给得很细，但不少数据来自开发者自测或单次对比，最好自己按清单复现；不想折腾就直接调 API。</p>
+</div>
+</article></div></body></html>
