@@ -1,0 +1,53 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>【量策实验室】因子死亡报告｜97 个量化因子实证：为什么公开策略注定失效？</title><style>
+:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f6f8fb;color:#0f172a;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC",sans-serif;line-height:1.8}
+.wrap{max-width:900px;margin:0 auto;padding:36px 18px 80px}
+article{background:#fff;border:1px solid #e5eaf2;border-radius:18px;padding:34px 38px;box-shadow:0 8px 30px rgba(15,23,42,.04)}
+h1{font-size:30px;line-height:1.3;margin:0 0 10px}h2{font-size:21px;margin:30px 0 10px}
+a{color:#2563eb;text-decoration:none}a:hover{text-decoration:underline}
+.meta{color:#64748b;font-size:14px;margin:0 0 18px}
+.cover{width:100%;border-radius:14px;display:block;margin:18px 0;border:1px solid #e5eaf2}
+.summary{background:#f8fafc;border:1px solid #e5eaf2;border-left:4px solid #3b82f6;border-radius:10px;padding:14px 18px;margin:20px 0}
+.summary strong{display:block;margin-bottom:4px}
+.body p{margin:12px 0}.body ul,.body ol{margin:10px 0 10px 22px}.body li{margin:6px 0}
+.body blockquote{margin:16px 0;padding:10px 16px;border-left:3px solid #93c5fd;background:#f8fafc;color:#334155}
+.body code{background:#f1f5f9;padding:1px 5px;border-radius:4px}
+.body pre{background:#0f172a;color:#e2e8f0;padding:14px;border-radius:10px;overflow:auto}
+.back{display:inline-block;margin-bottom:16px;color:#64748b;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.card{background:#fff;border:1px solid #e5eaf2;border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(15,23,42,.04);display:flex;flex-direction:column;color:inherit}
+.card img{width:100%;height:150px;object-fit:cover;display:block;background:#e2e8f0}
+.card .pad{padding:14px 16px 18px}.card h2{font-size:17px;margin:0 0 8px;line-height:1.4}
+.card p{font-size:13px;color:#475569;margin:0 0 8px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.card small{color:#94a3b8;font-size:12px}
+.empty{padding:40px 0;color:#64748b;text-align:center}
+@media(max-width:640px){.wrap{padding:20px 12px 50px}article{padding:22px 18px}h1{font-size:24px}}
+</style></head><body><div class="wrap"><a class="back" href="../index.html">← 返回列表</a>
+<article>
+  <h1>【量策实验室】因子死亡报告｜97 个量化因子实证：为什么公开策略注定失效？</h1>
+  <p class="meta">UP：量策实验室 · <a href="https://www.bilibili.com/video/BV172aD6dEbv/" target="_blank" rel="noreferrer">BV172aD6dEbv</a> · 2026-11-07</p>
+  <img class="cover" src="../assets/BV172aD6dEbv.jpg" alt="【量策实验室】因子死亡报告｜97 个量化因子实证：为什么公开策略注定失效？">
+  <div class="summary"><strong>一句话总结</strong>97 个因子：样本外 -26%、发表后 -32%、累计 -58%；前一段是过拟合，后一段是套利拥挤。五层应对：回测打折、看近 3–5 年、分真假衰减、生命周期监测、低相关组合+收缩。</div>
+  <div class="body"><h2>一句话总结</h2>
+<p>这期精读 McLean &amp; Pontiff（2016）的 97 个因子研究：因子收益从样本内到样本外下降 <strong>26%</strong>，论文发表后再下降 <strong>32%</strong>，累计 <strong>58%</strong>——你回测看到的漂亮曲线，真正能拿到手的往往不到一半。前一段是数据挖掘/过拟合，后一段是套利拥挤。</p>
+
+<h2>视频讲了什么</h2>
+<p>论文把每个因子的历史拆成三段：样本内（原始论文研究区间）、样本外但发表前、发表后。97 个因子平均下来：以样本内收益为 100%，样本外剩 74%（-26%），发表后剩 42%（再 -32%），累计 -58%。如果样本内年化 20%，先扣样本外衰减剩 14.8%，再扣发表后衰减剩 8.4%，还没算交易成本、冲击成本和容量，最后落到个人口袋里可能更少。</p>
+<p>两段衰减的原因不同：样本外 -26% 主要来自数据挖掘/过拟合——期刊只发显著结果，研究者试了很多组合只把最好的写进论文，样本内好看有一部分是运气；发表后 -32% 主要来自套利拥挤——知道的人多了，资金同向进出，收益被摊薄。论文还发现：原始收益越高的因子，发表后衰减越厉害；发表后因子之间的相关性也会升高，你以为分散配置了五六个策略，实际可能是同一个拥挤交易的不同名字。</p>
+<p>视频给出五层应对：第一层，回测收益先打五折做预期管理（20% 按 10% 想，最大回撤按 1.5–2 倍准备）；第二层，重点看近 3–5 年、按年份拆开，如果收益逐年下台阶，说明还在衰减；第三层，区分“假衰减”和“真衰减”——一出样本就崩，多半是数据挖掘；样本外还稳、发表后才慢慢降，说明曾经真有效，只是被套利摊薄，逻辑还在就还能用，但别指望论文里的高收益；第四层，建立因子生命周期意识：发现→验证→扩散→拥挤→衰减，能传到你耳朵里的策略通常已不在早期，要么找小众逻辑，要么用滚动 3–5 年检验持续监测、失效就换；第五层，用低相关、逻辑来源不同的因子组合，并对回测收益做“收缩”（按显著性、样本量、逻辑强弱打折），不要因子越多越好，相关性高了反而失去分散。</p>
+<p>最后拔高一层：知识和收益之间有一条“知道的人越多、收益越低”的反比定律。任何信息/认知/工具优势都会扩散，所以没有一劳永逸的终极策略；唯一靠谱的优势是比别人学得更快、迭代得更快。片尾还留了一个问题：怎么判断一个因子从一开始就是真的，而不是运气好撞上的？下一期讲“显著性门槛从 2.0 提到 3.0”。</p>
+
+<h2>关键点</h2>
+<ul>
+<li><strong>两段衰减</strong>：样本外 -26%（过拟合/数据挖掘），发表后 -32%（套利拥挤），累计 -58%。</li>
+<li><strong>越赚钱越短命</strong>：原始收益越高的因子，发表后衰减越厉害；发表后因子相关性还会升高。</li>
+<li><strong>回测打五折</strong>：20% 年化先按 10% 做预期，最大回撤按 1.5–2 倍准备。</li>
+<li><strong>看近 3–5 年</strong>：按年份拆开看趋势，逐年下台阶＝还在衰减。</li>
+<li><strong>假衰减 vs 真衰减</strong>：一出样本就崩是假的；样本外稳、发表后才降是真的，逻辑还在就还能用。</li>
+<li><strong>生命周期</strong>：发现→验证→扩散→拥挤→衰减；滚动检验 + 及时迭代。</li>
+<li><strong>低相关组合 + 收缩</strong>：逻辑来源不同的因子才分散；对回测收益按显著性/样本/逻辑打折。</li>
+</ul>
+
+<h2>适合谁看</h2>
+<p>做量化选股、因子研究、策略回测的人；以及喜欢“抄策略”但实盘总不及预期的投资者。视频是论文精读 + 落地建议，信息密度高但不算难，最好有一点回测/因子基础；里面数字仅用于教学演示，不构成投资建议。</p>
+</div>
+</article></div></body></html>
