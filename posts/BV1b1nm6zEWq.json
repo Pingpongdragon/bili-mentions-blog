@@ -1,0 +1,9 @@
+{
+  "bvid": "BV1b1nm6zEWq",
+  "title": "DeepSeek 沙盒平台 DSec 深度拆解：日跑 300 万沙盒、38 万并发",
+  "author": "KianLee",
+  "summary": "DSec 是 Agent 训练的第二套基础设施：300 万沙盒/天、38 万并发、5000+/秒创建；四种后端、组合式镜像、3FS 按需加载、virtio-pmem/DAMON、SCHED_IDLE+core scheduling、与 RL 抢占恢复协同。",
+  "published": "2026-11-07",
+  "cover": "assets/BV1b1nm6zEWq.jpg",
+  "url": "https://www.bilibili.com/video/BV1b1nm6zEWq/"
+}
