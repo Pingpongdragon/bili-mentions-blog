@@ -1,0 +1,9 @@
+{
+  "bvid": "BV1j44z6GE6T",
+  "title": "12GB 显卡跑 510GB DeepSeek V4.1-Flash：三条路线实测",
+  "author": "翻车老头",
+  "summary": "Strata 跑 2-bit（46GB 内存起）、Prometheus 跑原始权重（7.4 tok/s，但仅 Windows/RTX30/40、64GB 内存、1.1TB SSD）、llama.cpp 在 12GB 卡还不行；32GB 内存只能干等。",
+  "published": "2026-11-07",
+  "cover": "assets/BV1j44z6GE6T.jpg",
+  "url": "https://www.bilibili.com/video/BV1j44z6GE6T/"
+}
