@@ -1,0 +1,53 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>拆解 DeepSeek 生产推理架构：从 DeepInfer 源码到技术报告</title><style>
+:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f6f8fb;color:#0f172a;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC",sans-serif;line-height:1.8}
+.wrap{max-width:900px;margin:0 auto;padding:36px 18px 80px}
+article{background:#fff;border:1px solid #e5eaf2;border-radius:18px;padding:34px 38px;box-shadow:0 8px 30px rgba(15,23,42,.04)}
+h1{font-size:30px;line-height:1.3;margin:0 0 10px}h2{font-size:21px;margin:30px 0 10px}
+a{color:#2563eb;text-decoration:none}a:hover{text-decoration:underline}
+.meta{color:#64748b;font-size:14px;margin:0 0 18px}
+.cover{width:100%;border-radius:14px;display:block;margin:18px 0;border:1px solid #e5eaf2}
+.summary{background:#f8fafc;border:1px solid #e5eaf2;border-left:4px solid #3b82f6;border-radius:10px;padding:14px 18px;margin:20px 0}
+.summary strong{display:block;margin-bottom:4px}
+.body p{margin:12px 0}.body ul,.body ol{margin:10px 0 10px 22px}.body li{margin:6px 0}
+.body blockquote{margin:16px 0;padding:10px 16px;border-left:3px solid #93c5fd;background:#f8fafc;color:#334155}
+.body code{background:#f1f5f9;padding:1px 5px;border-radius:4px}
+.body pre{background:#0f172a;color:#e2e8f0;padding:14px;border-radius:10px;overflow:auto}
+.back{display:inline-block;margin-bottom:16px;color:#64748b;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.card{background:#fff;border:1px solid #e5eaf2;border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(15,23,42,.04);display:flex;flex-direction:column;color:inherit}
+.card img{width:100%;height:150px;object-fit:cover;display:block;background:#e2e8f0}
+.card .pad{padding:14px 16px 18px}.card h2{font-size:17px;margin:0 0 8px;line-height:1.4}
+.card p{font-size:13px;color:#475569;margin:0 0 8px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.card small{color:#94a3b8;font-size:12px}
+.empty{padding:40px 0;color:#64748b;text-align:center}
+@media(max-width:640px){.wrap{padding:20px 12px 50px}article{padding:22px 18px}h1{font-size:24px}}
+</style></head><body><div class="wrap"><a class="back" href="../index.html">← 返回列表</a>
+<article>
+  <h1>拆解 DeepSeek 生产推理架构：从 DeepInfer 源码到技术报告</h1>
+  <p class="meta">UP：vllm_project · <a href="https://www.bilibili.com/video/BV1cgHP6BEp1/" target="_blank" rel="noreferrer">BV1cgHP6BEp1</a> · 2026-11-09</p>
+  
+  <div class="summary"><strong>一句话总结</strong>DeepSeek V4.1 推理架构拆解：PD 分离 + 3FS 池化 KV、EPLB 专家负载均衡、DPLB 数据并行负载均衡；EPLB 端到端约 2%，prefill 收益 4–6%，DSpark 验证长度 5 降到 3.2–4.4。</div>
+  <div class="body"><h2>一句话总结</h2>
+<p>这期 vLLM 小课堂把 DeepSeek V4.1 的生产推理架构拆成了三件事：<strong>PD 分离与 3FS 池化 KV、EPLB 专家负载均衡、DPLB 数据并行负载均衡</strong>，并给出一批实测收益和工程取舍。</p>
+
+<h2>视频讲了什么</h2>
+<p>整体架构是 encoder / prefill / decode 三级分离：多模态 encoder 单独拆出，可以用差一点的卡；prefill 和 decode 各自做负载均衡，共享 DeepSeek 的 3FS 存储。作者说，这套设计大部分围绕 load balance 展开。</p>
+<p>Prefill 尽量用小 batch，能放下就行；decode 是 memory bound，可以用极高带宽换通信。并行策略上，TP 会切出不好的 shape、损失峰值吞吐，PP 又和 V4.1 的跨层 KV 复用冲突；官方希望 64 卡 P + 64 卡 D 作为一个基本单元。Router 不做 cache-aware，是因为没有高性能池化 KV；DeepInfer 改用 3FS 后，KV 可以持久化、跨机命中。</p>
+<p>KV 分两种：CSA 是压缩的 DSA，128 token 分页，持久化到 3FS；SWA 只落本机内存，由 entry point 做路由和兜底，分配 128 个槽位再加 6 个给 MTP 投机。H2D 走 GDR（GPUDirect RDMA），不占 SM，提交开销远低于 copy engine / kernel。</p>
+<p>EPLB 解决 MoE 专家热点：先重排，再对过热专家做冗余，本质是 best-fit 装箱；prefill 每卡冗余 4 个专家、约每 1000 步重排，decode 冗余 1 个、约每 1 万步重排，按物理时间都接近 10 分钟一次。实测端到端约 2%，prefill 的 EPLB 收益约 4–6%。DPLB 则按上下文长度分桶（≤16K、16–64K、>256K），每个桶有独立 batch 预算；prefill 按时间预算组 batch（约 300ms）再 allreduce 取最小，decode 看请求数和 KV 总长度，以平均线 +5% 区分长短请求。</p>
+<p>最后是 DSpark 动态投机验证：验证 token 数从 5 降到 3.2–4.4，平均接受长度从 3.29 略降到 3.2，但吞吐明显上升。</p>
+
+<h2>关键点</h2>
+<ul>
+<li><strong>三级分离</strong>：encoder 单独拆、PD 分离、共享 3FS；encoder 可用低端卡，但依赖自建机房。</li>
+<li><strong>3FS 账</strong>：单机 20 块 31TB SSD、约 600TB；10+2 EC，每卡 14.4TB 逻辑变 20TB 物理，八卡机约 160TB。</li>
+<li><strong>两种 KV</strong>：CSA 压缩后持久化到 3FS，SWA 只在本机内存；SWA 被淘汰后靠有损 replay 重建。</li>
+<li><strong>EPLB</strong>：重排 + 冗余 + best-fit 装箱，目标是最慢卡的总耗时最小，不是追求平均。</li>
+<li><strong>DPLB</strong>：prefill 按时间预算组 batch，decode 按请求数与 KV 总长度平衡，避免 all-to-all 等最慢 rank。</li>
+<li><strong>实测</strong>：EPLB 端到端约 2%，prefill 部分 4–6%；DSpark 验证长度缩短、吞吐上升。</li>
+</ul>
+
+<h2>适合谁看</h2>
+<p>做 LLM 推理部署、MoE 集群调度、KV Cache 池化的人；以及想理解“为什么 DeepSeek 的推理架构和开源 vLLM 路线不一样”的工程师。内容偏底层细节，需要提前了解 PD 分离、EP/DP、3FS 这些概念。</p>
+</div>
+</article></div></body></html>
