@@ -1,0 +1,9 @@
+{
+  "bvid": "BV1cgHP6BEp1",
+  "title": "拆解 DeepSeek 生产推理架构：从 DeepInfer 源码到技术报告",
+  "author": "vllm_project",
+  "summary": "DeepSeek V4.1 推理架构拆解：PD 分离 + 3FS 池化 KV、EPLB 专家负载均衡、DPLB 数据并行负载均衡；EPLB 端到端约 2%，prefill 收益 4–6%，DSpark 验证长度 5 降到 3.2–4.4。",
+  "published": "2026-11-09",
+  "cover": "",
+  "url": "https://www.bilibili.com/video/BV1cgHP6BEp1/"
+}
