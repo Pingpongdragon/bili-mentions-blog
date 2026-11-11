@@ -1,0 +1,54 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AgentBaton：强模型先做、小模型收尾，Agent 成本直降 65.9%</title><style>
+:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f6f8fb;color:#0f172a;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC",sans-serif;line-height:1.8}
+.wrap{max-width:900px;margin:0 auto;padding:36px 18px 80px}
+article{background:#fff;border:1px solid #e5eaf2;border-radius:18px;padding:34px 38px;box-shadow:0 8px 30px rgba(15,23,42,.04)}
+h1{font-size:30px;line-height:1.3;margin:0 0 10px}h2{font-size:21px;margin:30px 0 10px}
+a{color:#2563eb;text-decoration:none}a:hover{text-decoration:underline}
+.meta{color:#64748b;font-size:14px;margin:0 0 18px}
+.cover{width:100%;border-radius:14px;display:block;margin:18px 0;border:1px solid #e5eaf2}
+.summary{background:#f8fafc;border:1px solid #e5eaf2;border-left:4px solid #3b82f6;border-radius:10px;padding:14px 18px;margin:20px 0}
+.summary strong{display:block;margin-bottom:4px}
+.body p{margin:12px 0}.body ul,.body ol{margin:10px 0 10px 22px}.body li{margin:6px 0}
+.body blockquote{margin:16px 0;padding:10px 16px;border-left:3px solid #93c5fd;background:#f8fafc;color:#334155}
+.body code{background:#f1f5f9;padding:1px 5px;border-radius:4px}
+.body pre{background:#0f172a;color:#e2e8f0;padding:14px;border-radius:10px;overflow:auto}
+.back{display:inline-block;margin-bottom:16px;color:#64748b;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.card{background:#fff;border:1px solid #e5eaf2;border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(15,23,42,.04);display:flex;flex-direction:column;color:inherit}
+.card img{width:100%;height:150px;object-fit:cover;display:block;background:#e2e8f0}
+.card .pad{padding:14px 16px 18px}.card h2{font-size:17px;margin:0 0 8px;line-height:1.4}
+.card p{font-size:13px;color:#475569;margin:0 0 8px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.card small{color:#94a3b8;font-size:12px}
+.empty{padding:40px 0;color:#64748b;text-align:center}
+@media(max-width:640px){.wrap{padding:20px 12px 50px}article{padding:22px 18px}h1{font-size:24px}}
+</style></head><body><div class="wrap"><a class="back" href="../index.html">← 返回列表</a>
+<article>
+  <h1>AgentBaton：强模型先做、小模型收尾，Agent 成本直降 65.9%</h1>
+  <p class="meta">UP：熊二等兵 · <a href="https://www.bilibili.com/video/BV1RHWj6vEY9/" target="_blank" rel="noreferrer">BV1RHWj6vEY9</a> · 2026-11-11</p>
+  
+  <div class="summary"><strong>一句话总结</strong>AgentBaton 让强模型先做长程任务核心，再由轻量检测器判断交接时机，把局部修复与收尾交给小模型；两个基准、11 组模型对平均降 65.9% API 成本，精度基本不降，部分组合更高。</div>
+  <div class="body"><h2>一句话总结</h2>
+<p>这篇论文提出 <strong>AgentBaton</strong>：让强模型先做长程 Agent 任务的核心部分，再由一个轻量检测器判断“什么时候可以交接”，把剩下的局部修复、验证收尾交给便宜的小模型。结果是平均 API 成本降低 <strong>65.9%</strong>，精度基本不降，部分组合甚至更高。</p>
+
+<h2>视频讲了什么</h2>
+<p>视频解读的是论文《AgentBaton: Efficient Model Collaboration in Agentic Tasks》。它先点出矛盾：长周期 Agent 任务效果最好的一般是高端模型，但多轮调用很贵；小模型便宜，单独用准确率又不够。之前的多模型方案大多只做“单次查询级路由”，适配不了任务过程中不断变化的需求。</p>
+<p>论文把问题拆成两个：<strong>切换方向</strong>（先弱后强，还是先强后弱）和<strong>上下文怎么传</strong>（直接塞历史，还是写日志让下一个模型自己查）。实验在 Terminal Bench 2.1 和 DeepSWE v1.1 上做，用强模型跑基线，再在轨迹的 30%、75% 等节点做一次交接、不回切。</p>
+<p>结论很不对称：弱→强整体不如全程强模型，有时成本还更高；强→弱只要时机对，精度几乎不变，成本大幅下降。上下文传输也不是一种方式通吃：弱→强更适合日志文件，强→弱则要看原模型是否暴露完整思维链——暴露的用直接上下文更好，不暴露的用日志更好。</p>
+<p>接着是切换时机。论文总结了三个“可以交接”的信号：已有可运行原型/核心产出；已经通过测试或检查、拿到具体反馈；剩下的是局部排查、修复、验证。哪怕反馈是负面的，只要问题范围缩小了，也可以交给小模型。</p>
+<p>最后是 AgentBaton 检测器：用约 4000 条执行轨迹训练一个很小的模型，每轮判断“ready / not ready”，第一次 ready 就交接。单张 H100 上中位延迟约 338ms，不会明显拖慢任务。跨 11 组模型对、两个基准，平均省 65.9% API 成本，最高精度比全程强模型高 8.8 个百分点。</p>
+
+<h2>关键点</h2>
+<ul>
+<li><strong>核心范式</strong>：强模型先做规划/核心实现，合适时机一次性交给高效模型收尾。</li>
+<li><strong>方向不对称</strong>：强→弱有效；弱→强往往不省钱，还可能错误累积。</li>
+<li><strong>上下文迁移</strong>：日志文件适合弱→强；强→弱按原模型是否暴露思维链选择直接上下文或日志。</li>
+<li><strong>三个交接信号</strong>：有可运行原型、拿到测试反馈、剩余工作已局部化。</li>
+<li><strong>检测器</strong>：轻量分类器在线判断交接点，中位延迟 338ms，无需改现有 Agent 框架。</li>
+<li><strong>收益</strong>：平均 -65.9% API 成本；11 组模型对中多数保持精度，部分还提升。</li>
+<li><strong>局限</strong>：目前只支持一次交接，未来可探索多次切换和自适应上下文方式。</li>
+</ul>
+
+<h2>适合谁看</h2>
+<p>做 Agent 应用、被长程任务 API 成本卡住的人；以及想理解“强模型 + 小模型”怎么协作而不掉精度的工程师。视频是论文解读，适合先建立框架，再回去看原文的实验细节。</p>
+</div>
+</article></div></body></html>
