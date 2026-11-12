@@ -1,0 +1,9 @@
+{
+  "bvid": "BV1N7bv6SEht",
+  "title": "从模型到 Harness：Agent 上下文工程与驾驭工程的 100 分钟",
+  "author": "xiegangqingn_com",
+  "summary": "模型只是无状态文字函数；工具/MCP/skill/plugin 决定能做什么，上下文五操作（写入/选择/检索/压缩/隔离）与 harness 五层决定稳不稳；独立验收与验证标准比让 Agent 跑起来更难。",
+  "published": "2026-11-12",
+  "cover": "",
+  "url": "https://www.bilibili.com/video/BV1N7bv6SEht/"
+}
