@@ -1,0 +1,54 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DeepSeek Harness 的 64 天：25,848 个提交与 100% 覆盖率</title><style>
+:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f6f8fb;color:#0f172a;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC",sans-serif;line-height:1.8}
+.wrap{max-width:900px;margin:0 auto;padding:36px 18px 80px}
+article{background:#fff;border:1px solid #e5eaf2;border-radius:18px;padding:34px 38px;box-shadow:0 8px 30px rgba(15,23,42,.04)}
+h1{font-size:30px;line-height:1.3;margin:0 0 10px}h2{font-size:21px;margin:30px 0 10px}
+a{color:#2563eb;text-decoration:none}a:hover{text-decoration:underline}
+.meta{color:#64748b;font-size:14px;margin:0 0 18px}
+.cover{width:100%;border-radius:14px;display:block;margin:18px 0;border:1px solid #e5eaf2}
+.summary{background:#f8fafc;border:1px solid #e5eaf2;border-left:4px solid #3b82f6;border-radius:10px;padding:14px 18px;margin:20px 0}
+.summary strong{display:block;margin-bottom:4px}
+.body p{margin:12px 0}.body ul,.body ol{margin:10px 0 10px 22px}.body li{margin:6px 0}
+.body blockquote{margin:16px 0;padding:10px 16px;border-left:3px solid #93c5fd;background:#f8fafc;color:#334155}
+.body code{background:#f1f5f9;padding:1px 5px;border-radius:4px}
+.body pre{background:#0f172a;color:#e2e8f0;padding:14px;border-radius:10px;overflow:auto}
+.back{display:inline-block;margin-bottom:16px;color:#64748b;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.card{background:#fff;border:1px solid #e5eaf2;border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(15,23,42,.04);display:flex;flex-direction:column;color:inherit}
+.card img{width:100%;height:150px;object-fit:cover;display:block;background:#e2e8f0}
+.card .pad{padding:14px 16px 18px}.card h2{font-size:17px;margin:0 0 8px;line-height:1.4}
+.card p{font-size:13px;color:#475569;margin:0 0 8px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.card small{color:#94a3b8;font-size:12px}
+.empty{padding:40px 0;color:#64748b;text-align:center}
+@media(max-width:640px){.wrap{padding:20px 12px 50px}article{padding:22px 18px}h1{font-size:24px}}
+</style></head><body><div class="wrap"><a class="back" href="../index.html">← 返回列表</a>
+<article>
+  <h1>DeepSeek Harness 的 64 天：25,848 个提交与 100% 覆盖率</h1>
+  <p class="meta">UP：catface996 · <a href="https://www.bilibili.com/video/BV1HzW96UEvC/" target="_blank" rel="noreferrer">BV1HzW96UEvC</a> · 2026-11-14</p>
+  
+  <div class="summary"><strong>一句话总结</strong>用 git 记录还原：06-10 首提交、08-13 公开，内部 64 天 25,848 个提交；第二天立下逐文件 100% 覆盖率并补 59 个测试；TUI 18 天加入又删除，42 个版本全是 RC/alpha，暂不收外部 PR。</div>
+  <div class="body"><h2>一句话总结</h2>
+<p>这期用 git 记录还原 DeepSeek Harness 的“64 天”：<strong>2026-06-10 第一个提交，08-13 仓库公开；内部 64 天写了 25,848 个提交，公开时已有完整测试与 100% 逐文件覆盖率</strong>，但截至 11-11 的 42 个版本全是 RC/alpha，没有正式版。</p>
+
+<h2>视频讲了什么</h2>
+<p>开场先纠正一个直觉：GitHub 仓库创建日期写 08-13，但第一个提交是 06-10，所以“刚开源就这么完整”其实是内部已经做了 64 天。第一版 README 只有几行，标题是 DeepSeek Harness，说明这是该组的 monorepo，项目清单只有一项——DeepSeek Code，也就是编程 Agent 产品。</p>
+<p>第二天 06-11 的提交立下规矩：packages 下各包源码要逐文件、逐行、逐分支都有测试，覆盖率 100%；同一个提交补了 59 个测试。07-04 的提交改写 README，删掉 DeepSeek Code 那一条，改成“DeepSeek Harness SDK 是一个基于插件、用来搭建 Agent Harness 的 SDK”。</p>
+<p>接着把模型公告与仓库记录拆成两条轨：07-31 V4-Flash 正式版公告提到用 DSH 极简模式做 code agent 评测；08-13 V4-Pro 公告没提 DSH，只和仓库公开同一天；08-21 视觉实验版又提到 DSH；10-17 V4.1-Flash 公告说针对 DSH 等框架优化，请升级到 0.2.1-RC1 以上。作者强调：同一天只算日期重合，不当因果。</p>
+<p>增长部分：6 月 579 个提交、7 月 8,088、8/9 月各 6,000+、10 月 4,000+，合计 25,848，平均每天约 175 个（含合并提交）。7 月加进 TUI 包，18 天后 08-04 又连入口一起删掉，一次改动 430 个文件、删 28,905 行。会话文件格式半个月从 V1 升到 V4。</p>
+<p>公开仓库目前 27 万多星，issues 开着、discussions 关着，贡献指南写明暂不接受外部 PR。作者给读法：看提交、看设计笔记、看官方公告，按来源挂角标；并提醒 100% 覆盖率的代价是测试代码量——tests 目录约 72.5 万行，比 src 的 53.4 万行还多（含空白、注释、测试数据）。</p>
+
+<h2>关键点</h2>
+<ul>
+<li><strong>64 天</strong>：06-10 首提交到 08-13 公开，不是“公开后才开始做”。</li>
+<li><strong>25,848 个提交</strong>：平均每天约 175 个，7 月最多 8,088。</li>
+<li><strong>100% 逐文件覆盖率</strong>：第二天立规，同提交补 59 个测试。</li>
+<li><strong>TUI 18 天生死</strong>：07-17 加入，08-04 删除，删 28,905 行。</li>
+<li><strong>42 个版本无正式版</strong>：全部带 RC/alpha 后缀。</li>
+<li><strong>模型公告三次点名</strong>：两次当评测框架，一次请升级；08-13 只日期重合。</li>
+<li><strong>读法</strong>：提交/笔记/公告分来源，别把同一天当因果。</li>
+</ul>
+
+<h2>适合谁看</h2>
+<p>想了解 DSH 早期工程节奏、monorepo 与插件化设计的人；以及想看“如何用 git 记录做产品考古”的人。视频是独立解读，不是官方出品；数据锚定 11-04 的 HEAD 与 11-11 的快照。</p>
+</div>
+</article></div></body></html>
