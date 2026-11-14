@@ -1,0 +1,9 @@
+{
+  "bvid": "BV1HzW96UEvC",
+  "title": "DeepSeek Harness 的 64 天：25,848 个提交与 100% 覆盖率",
+  "author": "catface996",
+  "summary": "用 git 记录还原：06-10 首提交、08-13 公开，内部 64 天 25,848 个提交；第二天立下逐文件 100% 覆盖率并补 59 个测试；TUI 18 天加入又删除，42 个版本全是 RC/alpha，暂不收外部 PR。",
+  "published": "2026-11-14",
+  "cover": "",
+  "url": "https://www.bilibili.com/video/BV1HzW96UEvC/"
+}
