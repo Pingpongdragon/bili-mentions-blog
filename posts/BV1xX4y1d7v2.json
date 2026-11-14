@@ -1,0 +1,9 @@
+{
+  "bvid": "BV1xX4y1d7v2",
+  "title": "信号量：袋子和球，从生产者消费者到哲学家吃饭",
+  "author": "绿导师原谅你了",
+  "summary": "信号量是带计数器的袋子：P 拿球、V 放球；初值 1 是互斥锁，初值 N 是并发限额。用它可写生产者消费者、happens-before 和计算图；哲学家吃饭可用限制上桌人数或集中服务员避免死锁。",
+  "published": "2026-11-14",
+  "cover": "",
+  "url": "https://www.bilibili.com/video/BV1xX4y1d7v2/"
+}
