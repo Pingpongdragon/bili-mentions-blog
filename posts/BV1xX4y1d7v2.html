@@ -1,0 +1,55 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>信号量：袋子和球，从生产者消费者到哲学家吃饭</title><style>
+:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f6f8fb;color:#0f172a;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC",sans-serif;line-height:1.8}
+.wrap{max-width:900px;margin:0 auto;padding:36px 18px 80px}
+article{background:#fff;border:1px solid #e5eaf2;border-radius:18px;padding:34px 38px;box-shadow:0 8px 30px rgba(15,23,42,.04)}
+h1{font-size:30px;line-height:1.3;margin:0 0 10px}h2{font-size:21px;margin:30px 0 10px}
+a{color:#2563eb;text-decoration:none}a:hover{text-decoration:underline}
+.meta{color:#64748b;font-size:14px;margin:0 0 18px}
+.cover{width:100%;border-radius:14px;display:block;margin:18px 0;border:1px solid #e5eaf2}
+.summary{background:#f8fafc;border:1px solid #e5eaf2;border-left:4px solid #3b82f6;border-radius:10px;padding:14px 18px;margin:20px 0}
+.summary strong{display:block;margin-bottom:4px}
+.body p{margin:12px 0}.body ul,.body ol{margin:10px 0 10px 22px}.body li{margin:6px 0}
+.body blockquote{margin:16px 0;padding:10px 16px;border-left:3px solid #93c5fd;background:#f8fafc;color:#334155}
+.body code{background:#f1f5f9;padding:1px 5px;border-radius:4px}
+.body pre{background:#0f172a;color:#e2e8f0;padding:14px;border-radius:10px;overflow:auto}
+.back{display:inline-block;margin-bottom:16px;color:#64748b;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.card{background:#fff;border:1px solid #e5eaf2;border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(15,23,42,.04);display:flex;flex-direction:column;color:inherit}
+.card img{width:100%;height:150px;object-fit:cover;display:block;background:#e2e8f0}
+.card .pad{padding:14px 16px 18px}.card h2{font-size:17px;margin:0 0 8px;line-height:1.4}
+.card p{font-size:13px;color:#475569;margin:0 0 8px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.card small{color:#94a3b8;font-size:12px}
+.empty{padding:40px 0;color:#64748b;text-align:center}
+@media(max-width:640px){.wrap{padding:20px 12px 50px}article{padding:22px 18px}h1{font-size:24px}}
+</style></head><body><div class="wrap"><a class="back" href="../index.html">← 返回列表</a>
+<article>
+  <h1>信号量：袋子和球，从生产者消费者到哲学家吃饭</h1>
+  <p class="meta">UP：绿导师原谅你了 · <a href="https://www.bilibili.com/video/BV1xX4y1d7v2/" target="_blank" rel="noreferrer">BV1xX4y1d7v2</a> · 2026-11-14</p>
+  
+  <div class="summary"><strong>一句话总结</strong>信号量是带计数器的袋子：P 拿球、V 放球；初值 1 是互斥锁，初值 N 是并发限额。用它可写生产者消费者、happens-before 和计算图；哲学家吃饭可用限制上桌人数或集中服务员避免死锁。</div>
+  <div class="body"><h2>一句话总结</h2>
+<p>这节从“信号量到底是什么”讲起：它就是一个带计数器的袋子，<strong>P 拿走一个球、V 放回一个球</strong>；初值为 1 时就是互斥锁，初值为 N 时可以控制并发数。掌握“袋子和球”的模型后，生产者消费者、happens-before、计算图、哲学家吃饭都能用同一套语言拆开。</p>
+
+<h2>视频讲了什么</h2>
+<p>开场先回顾条件变量：拿锁、检查条件、在锁内做操作；条件变量的问题是 signal 可能丢，且条件可以任意复杂。信号量是它的一个特例：内部只有一个 count，P 等到 count &gt; 0 再减一，V 直接加一；因为带计数，V 不会像 signal 那样“没人等就丢掉”。</p>
+<p>接着用“袋子/球”和“游泳池手环”两个比喻讲清楚：袋子代表资源池，球代表一单位许可；P 是伸手拿球，拿不到就等；V 是往袋子里放球。初值设为 1，P/V 就退化成 lock/unlock；初值设为 N，就能限制同时进入的线程数。</p>
+<p>然后落到生产者消费者：一个信号量表示“还能打几个左括号”，初值 N；另一个表示“已经打了几个左括号、可以打几个右括号”，初值 0。打左括号前 P(empty)、打完后 V(fill)；打右括号前 P(fill)、打完后 V(empty)。两个袋子之间挪球，就把同步写出来了。</p>
+<p>第三块是 happens-before：给“A 必须先于 B”建一个初值 0 的信号量，A 完成后 V，B 开始前 P。它比条件变量简单，因为计数不会丢。把每个依赖边都放一个信号量，就能实现任意计算图；线程 join 只是它的特例。若线程太多，可以把节点打包进一个线程，用程序顺序省掉部分同步。</p>
+<p>最后是哲学家吃饭：最直接的写法是每把叉子一个信号量，先 P 左再 P 右；五人同时拿起左手叉子就会死锁。视频给了两种思路：限制同时上桌人数（如 4 人），或者引入“服务员”集中管理叉子——所有请求先发给服务员，由它决定谁吃、谁等。集中式牺牲一点分布性，但能做全局公平与调度；前提是服务员不成为瓶颈。</p>
+
+<h2>关键点</h2>
+<ul>
+<li><strong>信号量 = 计数器 + 等待</strong>：P 等 count&gt;0 再减一，V 加一。</li>
+<li><strong>初值 1 = 互斥锁</strong>：P 是 lock，V 是 unlock。</li>
+<li><strong>初值 N = 并发限额</strong>：袋子里有 N 个球，第 N+1 个线程要等。</li>
+<li><strong>生产者消费者</strong>：empty/fill 两个袋子互相挪球。</li>
+<li><strong>happens-before</strong>：初值 0 的信号量，A 完成 V、B 开始 P。</li>
+<li><strong>计算图</strong>：每条依赖边一个信号量；join 是特例。</li>
+<li><strong>哲学家死锁</strong>：五人同时拿左叉；限制上桌人数或集中服务员。</li>
+<li><strong>集中式取舍</strong>：公平与全局调度更好，但服务员可能成瓶颈。</li>
+</ul>
+
+<h2>适合谁看</h2>
+<p>学操作系统并发、准备面试/考试的人；以及写多线程程序时总用条件变量、想理解信号量适用边界的人。课程是南大 2023 OS P10，例子多、节奏快，适合配合讲义和 lab 看。</p>
+</div>
+</article></div></body></html>
