@@ -1,0 +1,9 @@
+{
+  "bvid": "BV1hAHg6qEpP",
+  "title": "XTier + SGLang：显存内存混合跑 MoE，MiniMax M3.1 实测",
+  "author": "阳仔zyy",
+  "summary": "XTier 是 SGLang 插件，不改源码让 MoE 专家分布在显存+CPU 内存；MiniMax M3.1 激活 23.5B、每 token 读 13.2GB 专家，约 45→51.6 tok/s，瓶颈在等 CPU/内存；加速包可把其它模型从 65 提到 137 tok/s。",
+  "published": "2026-11-16",
+  "cover": "",
+  "url": "https://www.bilibili.com/video/BV1hAHg6qEpP/"
+}
