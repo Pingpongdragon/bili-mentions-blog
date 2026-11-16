@@ -1,0 +1,9 @@
+{
+  "bvid": "BV1Yf4b6zEPG",
+  "title": "AI Infra 的另一半：训练侧的显存、并行、RL 与稳定性",
+  "author": "AIOps架构师",
+  "summary": "训练侧五件事：每参数约 16 字节、6ND/MFU 估工期、ZeRO/FSDP 分片、DP/PP/TP/EP 按带宽选、RL 四步与训练稳定性；大集群故障是常态，ETT2 与 checkpoint 是关键。",
+  "published": "2026-11-16",
+  "cover": "",
+  "url": "https://www.bilibili.com/video/BV1Yf4b6zEPG/"
+}
