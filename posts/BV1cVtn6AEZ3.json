@@ -1,0 +1,9 @@
+{
+  "bvid": "BV1cVtn6AEZ3",
+  "title": "SKILL.state：长程 Agent 只带“下一步需要的状态”",
+  "author": "Agent智能体深度研究院",
+  "summary": "SKILL.state 用技能说明+结构化状态+最新观察驱动每步，模型提状态补丁与动作，程序校验后丢弃推理；200 步仓库任务 token 617万→12万，分数 0.84→0.94；抗噪强，但依赖预设 schema。",
+  "published": "2026-11-21",
+  "cover": "",
+  "url": "https://www.bilibili.com/video/BV1cVtn6AEZ3/"
+}
