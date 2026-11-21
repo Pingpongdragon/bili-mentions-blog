@@ -1,0 +1,55 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SKILL.state：长程 Agent 只带“下一步需要的状态”</title><style>
+:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f6f8fb;color:#0f172a;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC",sans-serif;line-height:1.8}
+.wrap{max-width:900px;margin:0 auto;padding:36px 18px 80px}
+article{background:#fff;border:1px solid #e5eaf2;border-radius:18px;padding:34px 38px;box-shadow:0 8px 30px rgba(15,23,42,.04)}
+h1{font-size:30px;line-height:1.3;margin:0 0 10px}h2{font-size:21px;margin:30px 0 10px}
+a{color:#2563eb;text-decoration:none}a:hover{text-decoration:underline}
+.meta{color:#64748b;font-size:14px;margin:0 0 18px}
+.cover{width:100%;border-radius:14px;display:block;margin:18px 0;border:1px solid #e5eaf2}
+.summary{background:#f8fafc;border:1px solid #e5eaf2;border-left:4px solid #3b82f6;border-radius:10px;padding:14px 18px;margin:20px 0}
+.summary strong{display:block;margin-bottom:4px}
+.body p{margin:12px 0}.body ul,.body ol{margin:10px 0 10px 22px}.body li{margin:6px 0}
+.body blockquote{margin:16px 0;padding:10px 16px;border-left:3px solid #93c5fd;background:#f8fafc;color:#334155}
+.body code{background:#f1f5f9;padding:1px 5px;border-radius:4px}
+.body pre{background:#0f172a;color:#e2e8f0;padding:14px;border-radius:10px;overflow:auto}
+.back{display:inline-block;margin-bottom:16px;color:#64748b;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.card{background:#fff;border:1px solid #e5eaf2;border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(15,23,42,.04);display:flex;flex-direction:column;color:inherit}
+.card img{width:100%;height:150px;object-fit:cover;display:block;background:#e2e8f0}
+.card .pad{padding:14px 16px 18px}.card h2{font-size:17px;margin:0 0 8px;line-height:1.4}
+.card p{font-size:13px;color:#475569;margin:0 0 8px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.card small{color:#94a3b8;font-size:12px}
+.empty{padding:40px 0;color:#64748b;text-align:center}
+@media(max-width:640px){.wrap{padding:20px 12px 50px}article{padding:22px 18px}h1{font-size:24px}}
+</style></head><body><div class="wrap"><a class="back" href="../index.html">← 返回列表</a>
+<article>
+  <h1>SKILL.state：长程 Agent 只带“下一步需要的状态”</h1>
+  <p class="meta">UP：Agent智能体深度研究院 · <a href="https://www.bilibili.com/video/BV1cVtn6AEZ3/" target="_blank" rel="noreferrer">BV1cVtn6AEZ3</a> · 2026-11-21</p>
+  
+  <div class="summary"><strong>一句话总结</strong>SKILL.state 用技能说明+结构化状态+最新观察驱动每步，模型提状态补丁与动作，程序校验后丢弃推理；200 步仓库任务 token 617万→12万，分数 0.84→0.94；抗噪强，但依赖预设 schema。</div>
+  <div class="body"><h2>一句话总结</h2>
+<p>论文 <strong>SKILL.state</strong> 提出：长程 Agent 不必把每一步的观察、动作、推理都追加进上下文，而是只保留<strong>技能说明 + 当前结构化状态 + 最新观察</strong>；模型每步输出“状态补丁 + 动作”，程序校验后再执行，并丢弃本步推理。200 步仓库任务里，token 从 617 万降到 12 万，分数从 0.84 升到 0.94。</p>
+
+<h2>视频讲了什么</h2>
+<p>先讲问题：Agent 每做一步都把观察、动作、推理接进下一轮，任务越长，旧动作、过时工具输出和无关观察越多；每一轮重复处理这些内容，成本接近二次增长，还会干扰模型对“当前事实”的判断。</p>
+<p>SKILL.state 把每步输入拆成三部分：P（不可变的技能说明）、Σ（当前结构化执行状态）、O（刚拿到的最新观察）。模型只看这三样，输出本步动作和“状态补丁”；运行时做确定性校验——字段是否存在、类型和格式对不对——通过后合并成下一状态，再执行动作；本步中间推理在校验后丢弃，不再进入下一次提示词。</p>
+<p>状态不是自由摘要，而是按领域预先定义的 schema。以 InterCode CTF 为例，只有五类字段：已发现的 flag、已测试的假设、当前活动文件、工作目录、命令摘要。空值可以表示删除字段；动作执行后，下一轮重新读取最新观察。这样历史推理不再承担主要信息载体，结构化状态才是。</p>
+<p>实验分受控环境和公开任务。Warehouse 100 步：带滚动对话的状态型基线用 106 万 token，SKILL.state 用 6.5 万，分数 0.91→0.94；200 步：617 万 vs 12.2 万，分数 0.84→0.94。加入 50 个无关事件后，历史追加基线从 0.68 掉到 0.53，SKILL.state 仍为 0.98。公开任务 InterCode CTF pass@1 54.2%，τ-Bench Retail 58.3%、Airline 32.4%。</p>
+<p>关键对照是“预算匹配”：输入都压到约 1800–1905 token 时，完整 ReAct 0.84、滑动截断 0.18、摘要封顶 0.52、LLMLingua 压缩 0.22，SKILL.state 0.94。作者想说明：效果不是因为“字少了”，而是状态字段能否准确承载下一步所需事实。</p>
+<p>限制也讲得清楚：状态 schema 要提前设计；早期观察如果很晚才重新重要，丢了历史就找不回；审计、调试、解释过去动作时，历史轨迹本身就是目标；多 Agent 并发写状态还需要确定性冲突处理。小模型的主要错误不是不会推理，而是过早覆盖/删除状态、schema 理解与 JSON 格式。</p>
+
+<h2>关键点</h2>
+<ul>
+<li><strong>三件套输入</strong>：技能说明 P + 结构化状态 Σ + 最新观察 O。</li>
+<li><strong>状态补丁</strong>：模型提动作和字段更新，程序校验类型/格式后再合并。</li>
+<li><strong>丢弃推理</strong>：本步推理只进审计记录，不再占据下一次上下文。</li>
+<li><strong>成本</strong>：200 步 617 万→12.2 万 token，分数 0.84→0.94。</li>
+<li><strong>抗噪</strong>：50 个无关事件后仍 0.98，干扰在补丁阶段被过滤。</li>
+<li><strong>不是“压短”</strong>：预算匹配下，截断/摘要/压缩都明显低于结构化状态。</li>
+<li><strong>代价</strong>：依赖预先设计的 schema，漏写关键事实无法从历史恢复。</li>
+</ul>
+
+<h2>适合谁看</h2>
+<p>做长程 Agent、被上下文膨胀和旧信息干扰困扰的工程师；以及想理解“记忆/状态/历史”三者区别的人。论文是 EMNLP 接收工作，视频是解读，具体 schema 设计与实验细节建议看原文。</p>
+</div>
+</article></div></body></html>
