@@ -1,0 +1,56 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DeepSeek V4.1-Flash：890 字节/token 的 KV 缓存是怎么做到的</title><style>
+:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f6f8fb;color:#0f172a;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC",sans-serif;line-height:1.8}
+.wrap{max-width:900px;margin:0 auto;padding:36px 18px 80px}
+article{background:#fff;border:1px solid #e5eaf2;border-radius:18px;padding:34px 38px;box-shadow:0 8px 30px rgba(15,23,42,.04)}
+h1{font-size:30px;line-height:1.3;margin:0 0 10px}h2{font-size:21px;margin:30px 0 10px}
+a{color:#2563eb;text-decoration:none}a:hover{text-decoration:underline}
+.meta{color:#64748b;font-size:14px;margin:0 0 18px}
+.cover{width:100%;border-radius:14px;display:block;margin:18px 0;border:1px solid #e5eaf2}
+.summary{background:#f8fafc;border:1px solid #e5eaf2;border-left:4px solid #3b82f6;border-radius:10px;padding:14px 18px;margin:20px 0}
+.summary strong{display:block;margin-bottom:4px}
+.body p{margin:12px 0}.body ul,.body ol{margin:10px 0 10px 22px}.body li{margin:6px 0}
+.body blockquote{margin:16px 0;padding:10px 16px;border-left:3px solid #93c5fd;background:#f8fafc;color:#334155}
+.body code{background:#f1f5f9;padding:1px 5px;border-radius:4px}
+.body pre{background:#0f172a;color:#e2e8f0;padding:14px;border-radius:10px;overflow:auto}
+.back{display:inline-block;margin-bottom:16px;color:#64748b;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.card{background:#fff;border:1px solid #e5eaf2;border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(15,23,42,.04);display:flex;flex-direction:column;color:inherit}
+.card img{width:100%;height:150px;object-fit:cover;display:block;background:#e2e8f0}
+.card .pad{padding:14px 16px 18px}.card h2{font-size:17px;margin:0 0 8px;line-height:1.4}
+.card p{font-size:13px;color:#475569;margin:0 0 8px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.card small{color:#94a3b8;font-size:12px}
+.empty{padding:40px 0;color:#64748b;text-align:center}
+@media(max-width:640px){.wrap{padding:20px 12px 50px}article{padding:22px 18px}h1{font-size:24px}}
+</style></head><body><div class="wrap"><a class="back" href="../index.html">← 返回列表</a>
+<article>
+  <h1>DeepSeek V4.1-Flash：890 字节/token 的 KV 缓存是怎么做到的</h1>
+  <p class="meta">UP：为什么叫QQ · <a href="https://www.bilibili.com/video/BV1uMYj6mEGA/" target="_blank" rel="noreferrer">BV1uMYj6mEGA</a> · 2026-11-22</p>
+  
+  <div class="summary"><strong>一句话总结</strong>552B MoE，每 token 全局 KV 890 字节；CED 20+20 层让 prefill 只跑前 20 层、激活约 8B，CSA2 分层稀疏+FP4+SWA 有界回放把 HBM 压到 1/4、SSD 1/8；后训练算法不变，收益来自数据管线与百万级沙箱。</div>
+  <div class="body"><h2>一句话总结</h2>
+<p>这期拆 DeepSeek V4.1-Flash：<strong>552B MoE，每 token 全局 KV 缓存压到 890 字节</strong>，靠 CED 因果编码器、CSA2 稀疏注意力、FP4 与 SWA 有界回放，把 HBM 占用压到约 1/4、SSD 压到约 1/8；后训练没换算法，收益主要来自数据管线与百万级沙箱。</p>
+
+<h2>视频讲了什么</h2>
+<p>开场先给矛盾：名字是“跑量小模型”，跑分却反超自家 V4-Pro；552B 参数，每 token 全局 KV 只有 890 字节，上一代 V4-Flash 是 3514 字节，2023 年的 V1 是 38 万字节，三年压了 437 倍。作者提醒：Agent 长任务里模型大部分时间在读代码、读工具返回、读几十轮历史，缓存命中率常年 98% 以上，账单大头是输入与缓存，不是生成。</p>
+<p>第一层改动是 CED 因果编码器：40 层 Transformer 劈成前 20 层编码器、后 20 层解码器；解码器的全局 KV 不从本层隐状态算，直接拿第 20 层输出乘每层投影矩阵。效果是 prefill 只跑前 20 层，后 20 层的全局 KV 相当于“白减”，处理新提示词时激活参数只要 8B。思路来自微软 YOCO 论文，DeepSeek 补了逐层滑窗、百万 token 训练，做成生产模型。</p>
+<p>第二层是 CSA2 压缩稀疏注意力：每层静态分配 full / random / reuse 三种模式，编码器层算全局 KV 和索引，后面大量 reuse 层直接复用缓存与 top-k 索引，只算 query 和局部滑窗。首个 full 层扫描全上下文，挑出 2048 个块、每块 8 个位置，共 16,384 个候选，后续索引器只在这个池子里选最多 512 条；上下文涨到 100 万，后续每层索引开销也不变。</p>
+<p>890 字节是三条压缩叠加：共享 latent + FP4 量化、多个 token 压成一条缓存、跨层复用。主 KV 用 1-bit 加每 16 通道一个缩放因子，索引器 K 用 MXFP4，局部滑窗保持 FP8；四个缓存 bank 三个 2:1、一个 1:1，算下来每原始 token 正好 890 字节。显存活缓存小 4 倍，SSD 持久缓存只剩 1/8——滑窗注意力的 KV 干脆不持久化，缺 SWA 时用 Bounded Replay 回放最近 128 个 token 重建近似局部状态，官方承认这是近似、不是等价。</p>
+<p>训练部分：45T token 多模态语料预训练后，没有新算法，SFT + RL + OPD 蒸馏都是标准配方；收益来自数据管线——大规模自动合成任务，每个任务配“问题/环境/验证”，用难度和正确性做奖励，让模型自己造题、自己验题；RL 后的轨迹再回流做任务质量再审。支撑它的是 DSec 弹性沙箱，同时跑几百万实例，单机 2500 个活容器，用最终一致性换规模；安全上每个沙箱配 AppArmor + eBPF 网络策略，因为 RL Agent 会奖励作弊。</p>
+<p>还有两个工程点：可控推理强度，在系统提示词里写 1–100 的 effort，奖励里的长度惩罚随 effort 指数衰减，API 暴露 low=50 / high=75 / max=100，简单任务开低档省输出 token；DeepJIT 是 header-only C++20 库，给 CUDA 与昇腾 NPU 做运行时 kernel 编译、缓存、加载，缓存键包含源码、include、编译器版本、编译选项，多节点共享缓存。</p>
+<p>跑分：Terminal Bench 2.1 90.6、DeepSWE v1.1 74.2（V4-Pro 62.7）、Codeforces 3471、SWE-bench 88.1；弱项 GPQA 90.9 低于 Kimi K3 的 92.9，HLE 36.8 离 Opus 5.5 的 56.3 差距明显。作者建议把 Agent 成本拆三笔账：计算（输入重用 CED 类不对称架构）、存储（缓存命中与未命中差 50 倍，prompt 前缀稳定、系统提示放前、变量放后）、带宽（长会话注意缓存保活，DSK 全局 KV 至少 72 小时）。</p>
+
+<h2>关键点</h2>
+<ul>
+<li><strong>890 字节/token</strong>：比 V4-Flash 的 3514 字节小约 4 倍，比 V1 小 437 倍。</li>
+<li><strong>CED</strong>：20 层编码器 + 20 层解码器，prefill 只跑前 20 层，激活约 8B。</li>
+<li><strong>CSA2</strong>：full/random/reuse 分层，候选池 16,384 选 512，长上下文索引开销不涨。</li>
+<li><strong>压缩三叠加</strong>：共享 latent + FP4、token 合并、跨层复用；HBM 1/4、SSD 1/8。</li>
+<li><strong>Bounded Replay</strong>：SWA 不持久化，缺缓存回放 128 token，近似而非等价。</li>
+<li><strong>后训练</strong>：算法不变，收益来自数据管线、自动合成任务与百万级沙箱。</li>
+<li><strong>effort 旋钮</strong>：1–100 可控推理强度，API 三档，省输出 token。</li>
+</ul>
+
+<h2>适合谁看</h2>
+<p>做 Agent/推理成本优化、想理解“为什么缓存比算力更贵”的工程师；以及关注 DeepSeek 架构演进的读者。视频是技术解读，具体数字与结论以官方技术报告为准。</p>
+</div>
+</article></div></body></html>
