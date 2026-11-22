@@ -1,0 +1,9 @@
+{
+  "bvid": "BV1uMYj6mEGA",
+  "title": "DeepSeek V4.1-Flash：890 字节/token 的 KV 缓存是怎么做到的",
+  "author": "为什么叫QQ",
+  "summary": "552B MoE，每 token 全局 KV 890 字节；CED 20+20 层让 prefill 只跑前 20 层、激活约 8B，CSA2 分层稀疏+FP4+SWA 有界回放把 HBM 压到 1/4、SSD 1/8；后训练算法不变，收益来自数据管线与百万级沙箱。",
+  "published": "2026-11-22",
+  "cover": "",
+  "url": "https://www.bilibili.com/video/BV1uMYj6mEGA/"
+}
